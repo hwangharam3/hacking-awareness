@@ -72,17 +72,10 @@ MITM은 공격자가 두 통신 주체(사용자와 서버) 사이에
     │   https://bank.com      │
     │                         │
     │  SSL/TLS 핸드셰이크     │
-    │  ├─ 인증서 검증        │
-    │  ├─ 암호화 키 생성      │
-    │  └─ 안전한 채널 구성    │
     │<──────────────────────  │
     │                         │
     │  [암호화된 데이터]      │
     │  ID: ●●●●●●●●●●●●    │
-    │──────────────────────>  │
-    │                         │
-    │  [암호화된 데이터]      │
-    │  Password: ●●●●●●●●●  │
     │──────────────────────>  │
     │                         │
     │  ✅ 인증 성공           │
@@ -93,7 +86,6 @@ MITM은 공격자가 두 통신 주체(사용자와 서버) 사이에
         print_success("✅ 특징:")
         print("  • 모든 데이터가 암호화됨")
         print("  • 제3자가 내용 읽을 수 없음")
-        print("  • SSL 인증서로 서버 신원 확인")
         
         create_divider()
 
@@ -110,8 +102,7 @@ MITM은 공격자가 두 통신 주체(사용자와 서버) 사이에
         
         simulate_delay(1)
         
-        print_attack("\n공격자가 거짓 ARP 패킷을 브로드캐스트합니다:")
-        print()
+        print_attack("\n공격자가 거짓 ARP 패킷을 브로드캐스트합니다:\n")
         
         arp_attack = """
 【 사용자에게 보낸 ARP 패킷 】
@@ -123,28 +114,10 @@ MITM은 공격자가 두 통신 주체(사용자와 서버) 사이에
 """
         print_attack(arp_attack)
         
-        print_attack("\n【 라우터에게 보낸 ARP 패킷 】")
-        print("\"192.168.1.100의 MAC 주소는 CC:CC:CC:CC:CC:CC입니다\"")
-        print("(실제로는 공격자의 MAC 주소)")
-        
-        print_attack("\n결과: 라우터의 ARP 캐시도 변조됨")
-        print("      192.168.1.100 → CC:CC:CC:CC:CC:CC (거짓!)")
-        
+        print_attack("\n공격자가 라우터에도 거짓 ARP를 보냅니다!")
         print_error("\n❌ 이제 모든 트래픽이 공격자를 통해 흐릅니다!")
         
         simulate_delay(1)
-        
-        traffic_flow = """
-【 변조된 네트워크 흐름 】
-
-사용자         공격자           라우터/서버
-│               │                 │
-│──data────────>│──data────────>  │
-│               │(도청 및 읽음)    │
-│<────data──────│<────data────── │
-│               │(수정 가능)       │
-"""
-        print_attack(traffic_flow)
         
         create_divider()
 
@@ -159,11 +132,6 @@ MITM은 공격자가 두 통신 주체(사용자와 서버) 사이에
         simulate_delay(1)
         
         print_attack("공격자가 중간에 가로챕니다!")
-        print_attack("공격자 → 은행서버: 공격자 인증서로 연결")
-        simulate_delay(1)
-        
-        print_attack("공격자 → 사용자: 가짜 인증서 전송")
-        print_warning("⚠️  사용자가 인증서 경고를 무시하면...")
         simulate_delay(1)
         
         print_info("Step 2: 데이터 입력")
@@ -211,8 +179,6 @@ MITM은 공격자가 두 통신 주체(사용자와 서버) 사이에
 Starbucks                   강함    열림  ← 공격자의 가짜
 Starbucks_Guest             중간    열림
 Starbucks                   약함    열림  ← 정상 WiFi
-Cafe_WiFi                   중간    열림
-MyHotspot                   강함    열림
 """
         print_warning(wifi_list)
         
@@ -221,57 +187,19 @@ MyHotspot                   강함    열림
         print_attack("공격자의 WiFi에 접속하는 순간:")
         print_attack("✗ 모든 데이터가 공격자 서버를 통과")
         print_attack("✗ 공격자가 모든 트래픽 모니터링")
-        print_attack("✗ 로그인 정보, 메시지, 파일 등 모두 노출")
         
         simulate_delay(1)
         
         print_error("\n❌ 공격자가 수집한 데이터:")
         print("  • 금융 사이트 로그인 정보")
-        print("  • SNS 계정 정보")
         print("  • 개인 메시지 및 이메일")
         print("  • 신용카드 정보")
-        print("  • 사진/파일")
-        
-        create_divider()
-
-    def show_ssl_stripping(self):
-        """SSL 스트립핑"""
-        print_section("시나리오 5️⃣ : SSL 스트립핑 공격")
-        
-        print_attack("공격자가 HTTPS를 HTTP로 강제 변환합니다!\n")
-        
-        ssl_stripping = """
-【 정상 흐름 】
-사용자: https://bank.com 접속
-결과: 🔒 암호화된 안전한 연결
-
-【 공격자의 SSL 스트립핑 】
-사용자: https://bank.com 접속 (시도)
-        ↓
-공격자가 중간에 가로챔
-        ↓
-사용자 ← → 공격자: HTTP (암호화 해제)
-공격자 ← → 서버: HTTPS (원본과 통신)
-
-결과: 사용자 ↔ 공격자 구간이 평문(암호화X)
-"""
-        print_attack(ssl_stripping)
-        
-        print_warning("\n⚠️  사용자 입장에서는:")
-        print("  ✓ 주소가 https://bank.com으로 보임")
-        print("  ✓ 🔒 자물쇠 아이콘이 표시됨")
-        print("  ✗ 하지만 실제로는 HTTP로 통신!")
-        
-        print_error("\n❌ 결과:")
-        print("  • 사용자는 안전하다고 착각")
-        print("  • 공격자가 모든 데이터 평문으로 읽음")
-        print("  • 정보 탈취 및 변조 가능")
         
         create_divider()
 
     def show_attack_impact(self):
         """공격의 영향"""
-        print_section("시나리오 6️⃣ : 공격의 결과")
+        print_section("시나리오 5️⃣ : 공격의 결과")
         
         print_error("❌ MITM 공격으로 수집된 데이터:\n")
         
@@ -282,7 +210,6 @@ MyHotspot                   강함    열림
             ["금융 정보", "계좌/카드번호", "금전 사기"],
             ["개인정보", "주소/전화번호", "신원 도용"],
             ["통신 내용", "메시지/이메일", "프라이버시 침해"],
-            ["파일", "사진/문서", "개인정보 노출"],
         ]
         
         for impact in impacts:
@@ -291,45 +218,6 @@ MyHotspot                   강함    열림
         print()
         print_error("💰 금전적 피해: 수백만원대 손실 가능")
         print_error("🔓 정보 피해: 신용도 하락, 추가 사기")
-        print_error("😱 정신적 피해: 사생활 침해, 불안감")
-        
-        create_divider()
-
-    def show_mitm_flow_diagram(self):
-        """MITM 공격 흐름도"""
-        print_section("중간자 공격 전체 흐름도")
-        
-        flow = """
-【 정상 통신 흐름 】
-사용자 ←→ 서버
-(직접 통신, 안전)
-
-【 MITM 공격 흐름 】
-Step 1: ARP 스푸핑/Evil Twin
-────────────────────────
-사용자         공격자         서버
-│              │              │
-└──arp───────>│              │
-공격자로 리다이렉트
-
-Step 2: 데이터 가로채기
-────────────────────────
-사용자────────────────────> [공격자]
-                           │ (읽음)
-                           ├────────> 서버
-
-Step 3: 통신 모니터링
-────────────────────────
-모든 데이터를 공격자가 관찰/변조
-
-Step 4: 정보 수집
-────────────────────────
-• 로그인 정보
-• 금융 정보
-• 개인정보
-• 모든 통신 내용
-"""
-        print_attack(flow)
         
         create_divider()
 
@@ -351,13 +239,7 @@ Step 4: 정보 수집
         self.show_evil_twin_attack()
         pause()
         
-        self.show_ssl_stripping()
-        pause()
-        
         self.show_attack_impact()
-        pause()
-        
-        self.show_mitm_flow_diagram()
         pause()
         
         print_section("🎯 핵심 정리")
@@ -365,17 +247,9 @@ Step 4: 정보 수집
 【 MITM 공격의 위험성 】
 
 1️⃣ 실시간 데이터 도청
-   • 공격자가 모든 통신 내용 확인
-
 2️⃣ 데이터 변조 가능
-   • 송수신 데이터 조작 가능
-   
 3️⃣ 광범위한 피해
-   • 금융, 개인정보, 통신 모두 노출
-
 4️⃣ 탐지 어려움
-   • 사용자가 공격 인식 못함
-   • 정상 서비스처럼 작동
 
 다음: python 4_mitm_prevention.py 로 예방 방법 학습
 """
